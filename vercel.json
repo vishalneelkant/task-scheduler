@@ -17,12 +17,5 @@
       "dest": "/frontend/$1"
     }
   ],
-
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "JWT_SECRET_KEY": "@jwt_secret_key",
-    "FRONTEND_URL": "@frontend_url"
-  },
-
   "regions": ["iad1"]
 }
