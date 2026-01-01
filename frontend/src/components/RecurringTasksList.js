@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Card,
@@ -67,8 +67,8 @@ function RecurringTasksList({ tasks, loading, onTaskUpdated, onTaskDeleted, onOp
 
   if (tasks.length === 0) {
     return (
-      <Card 
-        sx={{ 
+      <Card
+        sx={{
           borderRadius: 2,
           border: '1px solid #e5e7eb',
           textAlign: 'center',
@@ -120,29 +120,29 @@ function RecurringTasksList({ tasks, loading, onTaskUpdated, onTaskDeleted, onOp
           <React.Fragment key={task.id}>
             <Box
               sx={{
-              p: 3,
-              bgcolor: '#ffffff',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                bgcolor: '#f9fafb',
-                transform: 'translateX(4px)',
-                '& .task-actions': {
-                  opacity: 1,
+                p: 3,
+                bgcolor: '#ffffff',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  bgcolor: '#f9fafb',
+                  transform: 'translateX(4px)',
+                  '& .task-actions': {
+                    opacity: 1,
+                  },
                 },
-              },
-              animation: `fadeInSlide 0.3s ease-out ${index * 0.05}s both`,
-              '@keyframes fadeInSlide': {
-                from: {
-                  opacity: 0,
-                  transform: 'translateY(-10px)',
+                animation: `fadeInSlide 0.3s ease-out ${index * 0.05}s both`,
+                '@keyframes fadeInSlide': {
+                  from: {
+                    opacity: 0,
+                    transform: 'translateY(-10px)',
+                  },
+                  to: {
+                    opacity: 1,
+                    transform: 'translateY(0)',
+                  },
                 },
-                to: {
-                  opacity: 1,
-                  transform: 'translateY(0)',
-                },
-              },
-            }}
-          >
+              }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                 <Box
                   sx={{
@@ -220,10 +220,10 @@ function RecurringTasksList({ tasks, loading, onTaskUpdated, onTaskDeleted, onOp
                   )}
                 </Box>
 
-                <Box 
+                <Box
                   className="task-actions"
-                  sx={{ 
-                    display: 'flex', 
+                  sx={{
+                    display: 'flex',
                     gap: 0.5,
                     opacity: { xs: 1, md: 0.6 },
                     transition: 'opacity 0.2s ease',
@@ -232,7 +232,7 @@ function RecurringTasksList({ tasks, loading, onTaskUpdated, onTaskDeleted, onOp
                   <IconButton
                     onClick={() => onEditTask(task)}
                     size="small"
-                    sx={{ 
+                    sx={{
                       color: '#4c9aff',
                       bgcolor: 'rgba(76, 154, 255, 0.05)',
                       '&:hover': {
@@ -246,7 +246,7 @@ function RecurringTasksList({ tasks, loading, onTaskUpdated, onTaskDeleted, onOp
                   <IconButton
                     onClick={() => handleDelete(task.id)}
                     size="small"
-                    sx={{ 
+                    sx={{
                       color: '#999',
                       '&:hover': {
                         color: '#d95550',
@@ -258,9 +258,9 @@ function RecurringTasksList({ tasks, loading, onTaskUpdated, onTaskDeleted, onOp
                     <Delete fontSize="small" />
                   </IconButton>
                 </Box>
+              </Box>
             </Box>
-          </Box>
-          {index < tasks.length - 1 && <Divider />}
+            {index < tasks.length - 1 && <Divider />}
           </React.Fragment>
         ))}
       </Card>

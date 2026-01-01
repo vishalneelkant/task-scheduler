@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -59,7 +59,8 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive, isPaused, minutes, seconds]);
+    // eslint-disable-next-line no-use-before-define
+  }, [isActive, isPaused, minutes, seconds, handleTimerComplete]);
 
   // Update browser tab title with timer countdown
   useEffect(() => {
@@ -76,15 +77,15 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
     };
   }, [minutes, seconds, isActive, isPaused, mode]);
 
-  const handleTimerComplete = async () => {
+  const handleTimerComplete = useCallback(async () => {
     setIsActive(false);
-    
+
     // Play notification sound
     playNotificationSound();
-    
+
     // Show browser notification
     showNotification();
-    
+
     // Save to backend if it was a work session
     if (mode === 'work' && selectedTask) {
       try {
@@ -98,7 +99,7 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
         console.error('Failed to save pomodoro:', err);
       }
     }
-    
+
     // Auto-switch mode
     if (mode === 'work') {
       setMode('break');
@@ -109,27 +110,27 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
       setMinutes(WORK_MINUTES);
       setSeconds(0);
     }
-    
+
     if (onComplete) {
       onComplete(mode);
     }
-  };
+  }, [mode, selectedTask, sessions, onComplete]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const playStartSound = () => {
     // Clock tick sound when starting
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    
+
     oscillator.frequency.value = 1000;
     oscillator.type = 'sine';
-    
+
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-    
+
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.15);
   };
@@ -137,22 +138,22 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
   const playNotificationSound = () => {
     // Clock alarm sound when timer completes (3 chimes)
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
+
     // Play three chimes
     for (let i = 0; i < 3; i++) {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.value = 800;
       oscillator.type = 'sine';
-      
+
       const startTime = audioContext.currentTime + (i * 0.3);
       gainNode.gain.setValueAtTime(0.3, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
-      
+
       oscillator.start(startTime);
       oscillator.stop(startTime + 0.25);
     }
@@ -161,10 +162,10 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
   const showNotification = () => {
     if ('Notification' in window && Notification.permission === 'granted') {
       const title = mode === 'work' ? '🎉 Work session complete!' : '☕ Break time over!';
-      const body = mode === 'work' 
-        ? 'Time to take a break! You earned it.' 
+      const body = mode === 'work'
+        ? 'Time to take a break! You earned it.'
         : 'Ready to focus again? Let\'s get back to work!';
-      
+
       new Notification(title, {
         body,
         icon: '/favicon.ico',
@@ -212,18 +213,18 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
   // Mini timer bar for minimized state
   if (minimized) {
     return (
-      <Card 
-        sx={{ 
+      <Card
+        sx={{
           borderRadius: 2,
           bgcolor: mode === 'work' ? '#fff5f5' : '#eff6ff',
           border: `2px solid ${mode === 'work' ? '#d95550' : '#4c9aff'}`,
         }}
       >
         <CardContent sx={{ p: 2, textAlign: 'center' }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
               color: mode === 'work' ? '#d95550' : '#4c9aff',
               fontFamily: 'monospace',
               display: 'flex',
@@ -243,8 +244,8 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
   }
 
   return (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         borderRadius: 2,
         bgcolor: mode === 'work' ? '#fff5f5' : '#eff6ff',
         border: `2px solid ${mode === 'work' ? '#d95550' : '#4c9aff'}`,

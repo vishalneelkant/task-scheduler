@@ -37,7 +37,7 @@ import { updateProfile, updatePassword } from '../services/api';
 
 function Profile() {
   const navigate = useNavigate();
-  const { user, login, logout } = useAuth();
+  const { user, login } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -84,25 +84,25 @@ function Profile() {
 
   const validatePasswordForm = () => {
     const errors = {};
-    
+
     if (!passwordData.currentPassword) {
       errors.currentPassword = 'Current password is required';
     }
-    
+
     if (!passwordData.newPassword) {
       errors.newPassword = 'New password is required';
     } else if (passwordData.newPassword.length < 6) {
       errors.newPassword = 'Password must be at least 6 characters';
     }
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
-    
+
     if (passwordData.currentPassword === passwordData.newPassword) {
       errors.newPassword = 'New password must be different from current password';
     }
-    
+
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -118,7 +118,7 @@ function Profile() {
         username: formData.username,
         email: formData.email,
       });
-      
+
       // Update user in context with new token
       login(response.access_token, response.user);
       setSuccess('Profile updated successfully!');
@@ -133,7 +133,7 @@ function Profile() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validatePasswordForm()) {
       return;
     }
@@ -146,7 +146,7 @@ function Profile() {
         current_password: passwordData.currentPassword,
         new_password: passwordData.newPassword,
       });
-      
+
       setSnackbar({ open: true, message: 'Password changed successfully!', severity: 'success' });
       setOpenPasswordDialog(false);
       setPasswordData({
@@ -155,8 +155,8 @@ function Profile() {
         confirmPassword: '',
       });
     } catch (err) {
-      setPasswordErrors({ 
-        currentPassword: err.response?.data?.error || 'Failed to change password' 
+      setPasswordErrors({
+        currentPassword: err.response?.data?.error || 'Failed to change password'
       });
     } finally {
       setLoading(false);
@@ -179,8 +179,8 @@ function Profile() {
   return (
     <Fade in timeout={500}>
       <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa' }}>
-        <AppBar 
-          position="static" 
+        <AppBar
+          position="static"
           elevation={0}
           sx={{
             bgcolor: '#d95550',
@@ -349,7 +349,7 @@ function Profile() {
                 Security
               </Typography>
               <Divider sx={{ mb: 3 }} />
-              
+
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
                   <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
@@ -377,8 +377,8 @@ function Profile() {
           </Card>
 
           {/* Password Change Dialog */}
-          <Dialog 
-            open={openPasswordDialog} 
+          <Dialog
+            open={openPasswordDialog}
             onClose={() => !loading && setOpenPasswordDialog(false)}
             maxWidth="sm"
             fullWidth
@@ -442,15 +442,15 @@ function Profile() {
                 />
               </DialogContent>
               <DialogActions sx={{ p: 3, pt: 1 }}>
-                <Button 
-                  onClick={() => setOpenPasswordDialog(false)} 
+                <Button
+                  onClick={() => setOpenPasswordDialog(false)}
                   disabled={loading}
                   sx={{ color: 'text.secondary' }}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   variant="contained"
                   disabled={loading}
                   startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}

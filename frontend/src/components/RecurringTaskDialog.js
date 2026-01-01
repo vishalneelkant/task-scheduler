@@ -15,7 +15,6 @@ import {
   Typography,
   ToggleButtonGroup,
   ToggleButton,
-  Chip,
 } from '@mui/material';
 import { Repeat } from '@mui/icons-material';
 import { createRecurringTask, updateRecurringTask } from '../services/api';
@@ -48,7 +47,7 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
         description: editTask.description || '',
         priority: editTask.priority || 3,
         recurrence_type: editTask.recurrence_type || 'daily',
-        recurrence_days: editTask.recurrence_days 
+        recurrence_days: editTask.recurrence_days
           ? editTask.recurrence_days.split(',').map(d => parseInt(d.trim()))
           : [],
       });
@@ -82,7 +81,7 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       setError('Title is required');
       return;
@@ -100,8 +99,8 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
         description: formData.description,
         priority: formData.priority,
         recurrence_type: formData.recurrence_type,
-        recurrence_days: formData.recurrence_type === 'weekly' 
-          ? formData.recurrence_days.join(',') 
+        recurrence_days: formData.recurrence_type === 'weekly'
+          ? formData.recurrence_days.join(',')
           : null,
         due_date: new Date().toISOString().split('T')[0],
       };
@@ -111,7 +110,7 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
       } else {
         await createRecurringTask(taskData);
       }
-      
+
       onTaskCreated();
       handleClose();
     } catch (err) {
@@ -208,9 +207,9 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
                 onChange={handleDayToggle}
                 aria-label="weekdays"
                 multiple
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
                   gap: 1,
                   '& .MuiToggleButton-root': {
                     flex: '0 0 auto',
@@ -238,8 +237,8 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
 
           <Box sx={{ mt: 2, p: 2, bgcolor: '#f9fafb', borderRadius: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              <strong>Note:</strong> This task will automatically appear on your task list 
-              {formData.recurrence_type === 'daily' 
+              <strong>Note:</strong> This task will automatically appear on your task list
+              {formData.recurrence_type === 'daily'
                 ? ' every day'
                 : formData.recurrence_days.length > 0
                   ? ` every ${formData.recurrence_days.map(d => WEEKDAYS[d].label).join(', ')}`
@@ -252,9 +251,9 @@ function RecurringTaskDialog({ open, onClose, onTaskCreated, editTask = null }) 
           <Button onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            variant="contained" 
+          <Button
+            type="submit"
+            variant="contained"
             disabled={loading}
             sx={{
               bgcolor: '#d95550',
