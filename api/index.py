@@ -12,6 +12,7 @@ import json
 import google.generativeai as genai
 
 # Configure logging for Vercel
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
