@@ -14,7 +14,8 @@ def init_database():
     with app.app_context():
         try:
             # Create all tables
-            #new changes
+            #changes
+
             db.create_all()
             print("✅ Database tables created successfully!")
             
