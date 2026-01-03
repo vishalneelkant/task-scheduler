@@ -548,7 +548,7 @@ function Dashboard() {
               </Button>
               <Button
                 variant="outlined"
-                startIcon={<Sparkles />}
+                startIcon={<AutoAwesome />}
                 onClick={() => setAiDialogOpen(true)}
                 sx={{
                   borderColor: '#d95550',
