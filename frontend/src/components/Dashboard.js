@@ -16,7 +16,7 @@ import {
   Avatar,
   ListItemIcon,
 } from '@mui/material';
-import { Logout, Add, BarChart, ExpandMore, ExpandLess, Timer, Repeat, CheckCircle, CheckBox, Person } from '@mui/icons-material';
+import { Logout, Add, BarChart, ExpandMore, ExpandLess, Timer, Repeat, CheckCircle, CheckBox, Person, Sparkles } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { getTasks, getAnalytics, getPomodoroStats, getRecurringTasks } from '../services/api';
 import TaskList from './TaskList';
@@ -25,6 +25,7 @@ import PomodoroTimer from './PomodoroTimer';
 import Analytics from './Analytics';
 import RecurringTasksList from './RecurringTasksList';
 import RecurringTaskDialog from './RecurringTaskDialog';
+import AITaskDialog from './AITaskDialog';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ function Dashboard() {
   const [recurringTasks, setRecurringTasks] = useState([]);
   const [recurringLoading, setRecurringLoading] = useState(false);
   const [openRecurringDialog, setOpenRecurringDialog] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false); // NEW
   const [editingRecurringTask, setEditingRecurringTask] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
@@ -182,6 +184,36 @@ function Dashboard() {
       ? '🎉 Focus session complete!'
       : '☕ Break complete!';
     setSnackbar({ open: true, message, severity: 'success' });
+  };
+
+  const handleAICreateTasks = async (tasks) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Create all tasks
+      for (const task of tasks) {
+        await import('../services/api').then(module =>
+          module.createTask({
+            ...task,
+            due_date: today
+          })
+        );
+      }
+
+      setSnackbar({
+        open: true,
+        message: `✨ Created ${tasks.length} task${tasks.length !== 1 ? 's' : ''} with AI!`,
+        severity: 'success'
+      });
+
+      fetchTasks();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to create tasks',
+        severity: 'error'
+      });
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -499,9 +531,8 @@ function Dashboard() {
                 sx={{
                   bgcolor: '#d95550',
                   color: 'white',
-                  fontWeight: 600,
-                  px: 4,
-                  py: 1.5,
+                  fontWeight: 500,
+                  px: 3,
                   fontSize: '0.95rem',
                   borderRadius: 2.5,
                   boxShadow: '0 2px 8px rgba(217, 85, 80, 0.25)',
@@ -514,6 +545,27 @@ function Dashboard() {
                 }}
               >
                 Add Task
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Sparkles />}
+                onClick={() => setAiDialogOpen(true)}
+                sx={{
+                  borderColor: '#d95550',
+                  color: '#d95550',
+                  fontWeight: 500,
+                  px: 3,
+                  fontSize: '0.95rem',
+                  borderRadius: 2.5,
+                  '&:hover': {
+                    borderColor: '#c62828',
+                    bgcolor: 'rgba(217, 85, 80, 0.05)',
+                    transform: 'translateY(-1px)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Create with AI ✨
               </Button>
             </Box>
           )}
@@ -628,9 +680,19 @@ function Dashboard() {
 
         <RecurringTaskDialog
           open={openRecurringDialog}
-          onClose={handleCloseRecurringDialog}
-          onTaskCreated={editingRecurringTask ? handleRecurringTaskUpdated : handleRecurringTaskCreated}
-          editTask={editingRecurringTask}
+          onClose={() => {
+            setOpenRecurringDialog(false);
+            setEditingRecurringTask(null);
+          }}
+          onTaskCreated={handleRecurringTaskCreated}
+          onTaskUpdated={handleRecurringTaskUpdated}
+          task={editingRecurringTask}
+        />
+
+        <AITaskDialog
+          open={aiDialogOpen}
+          onClose={() => setAiDialogOpen(false)}
+          onCreateTasks={handleAICreateTasks}
         />
 
         <Snackbar
