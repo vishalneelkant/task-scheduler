@@ -6,6 +6,16 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from datetime import datetime, date, timedelta
 from sqlalchemy import func
 import os
+import logging
+import sys
+
+# Configure logging for Vercel
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -14,17 +24,17 @@ app = Flask(__name__)
 # Use PostgreSQL instead of SQLite
 # Handle DATABASE_URL from various providers (some use postgres://, SQLAlchemy needs postgresql://)
 database_url = os.environ.get('DATABASE_URL', 'postgresql://localhost/pomovity')
-print(f"[CONFIG] Initial DATABASE_URL scheme: {database_url.split('://')[0] if '://' in database_url else 'no-scheme'}")
+logger.info(f"Initial DATABASE_URL scheme: {database_url.split('://')[0] if '://' in database_url else 'no-scheme'}")
 
 # Fix for Heroku/some providers that use postgres:// instead of postgresql://
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    print("[CONFIG] Converted postgres:// to postgresql://")
+    logger.info("Converted postgres:// to postgresql://")
 elif database_url.startswith('https://'):
-    print("[ERROR] DATABASE_URL is an HTTPS URL - this is invalid!")
+    logger.error("DATABASE_URL is an HTTPS URL - this is INVALID! Please use postgresql://")
     
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-print(f"[CONFIG] Final DATABASE_URL set: {database_url.split('@')[0] if '@' in database_url else 'local'}...")
+logger.info(f"DATABASE_URL configured: {database_url.split('@')[0] if '@' in database_url else 'local'}...")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Optimized for serverless: smaller pool size, faster connection handling
 # Only apply PostgreSQL-specific settings when using PostgreSQL
@@ -39,13 +49,13 @@ if database_url.startswith('postgresql://'):
             'sslmode': 'require'
         }
     }
-    print("[CONFIG] Using PostgreSQL-specific connection pool settings")
+    logger.info("Using PostgreSQL-specific connection pool settings")
 else:
     # For local dev with SQLite, use minimal config
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_pre_ping': True
     }
-    print("[CONFIG] Using SQLite configuration")
+    logger.info("Using SQLite configuration")
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'change-this-in-production')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -535,18 +545,18 @@ def get_analytics():
 @app.route('/api/pomodoros', methods=['POST'])
 @jwt_required()
 def create_pomodoro():
-    print("[POMODORO] Endpoint hit - POST /api/pomodoros")
+    logger.info("Pomodoro endpoint hit - POST /api/pomodoros")
     try:
         current_user_id = int(get_jwt_identity())
-        print(f"[POMODORO] Authenticated user ID: {current_user_id}")
+        logger.info(f"Authenticated user ID: {current_user_id}")
         data = request.get_json()
-        print(f"[POMODORO] Received data: {data}")
+        logger.debug(f"Received pomodoro data: {data}")
         
         task_id = data.get('task_id')
         duration = data.get('duration', 25)
         session_type = data.get('type', 'work')
         
-        print(f"[POMODORO] Creating session - task_id: {task_id}, duration: {duration}, type: {session_type}")
+        logger.info(f"Creating pomodoro session - task_id: {task_id}, duration: {duration}, type: {session_type}")
         
         new_pomodoro = PomodoroSession(
             user_id=current_user_id,
@@ -557,22 +567,22 @@ def create_pomodoro():
         
         db.session.add(new_pomodoro)
         db.session.commit()
-        print(f"[POMODORO] Successfully created pomodoro session ID: {new_pomodoro.id}")
+        logger.info(f"Successfully created pomodoro session ID: {new_pomodoro.id}")
         
         return jsonify({'message': 'Pomodoro recorded', 'pomodoro': new_pomodoro.to_dict()}), 201
     except Exception as e:
-        print(f"[POMODORO ERROR] Failed to create pomodoro: {str(e)}")
-        print(f"[POMODORO ERROR] Error type: {type(e).__name__}")
+        logger.error(f"Failed to create pomodoro: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/pomodoros/stats', methods=['GET'])
 @jwt_required()
 def get_pomodoro_stats():
-    print("[POMODORO] Endpoint hit - GET /api/pomodoros/stats")
+    logger.info("Pomodoro stats endpoint hit - GET /api/pomodoros/stats")
     try:
         current_user_id = int(get_jwt_identity())
-        print(f"[POMODORO STATS] Fetching stats for user ID: {current_user_id}")
+        logger.info(f"Fetching pomodoro stats for user ID: {current_user_id}")
         today = date.today()
         week_start = today - timedelta(days=today.weekday())
         
@@ -582,7 +592,7 @@ def get_pomodoro_stats():
             PomodoroSession.type == 'work',
             func.date(PomodoroSession.completed_at) == today
         ).all()
-        print(f"[POMODORO STATS] Found {len(today_pomodoros)} pomodoros for today")
+        logger.debug(f"Found {len(today_pomodoros)} pomodoros for today")
         
         # This week's pomodoros
         week_pomodoros = PomodoroSession.query.filter(
@@ -590,7 +600,7 @@ def get_pomodoro_stats():
             PomodoroSession.type == 'work',
             PomodoroSession.completed_at >= week_start
         ).all()
-        print(f"[POMODORO STATS] Found {len(week_pomodoros)} pomodoros for this week")
+        logger.debug(f"Found {len(week_pomodoros)} pomodoros for this week")
         
         # Calculate focus time
         today_focus_time = sum(p.duration for p in today_pomodoros)
@@ -606,11 +616,11 @@ def get_pomodoro_stats():
                 'focus_time': week_focus_time
             }
         }
-        print(f"[POMODORO STATS] Returning stats: {result}")
+        logger.info(f"Returning pomodoro stats: today={result['today']['count']}, week={result['week']['count']}")
         return jsonify(result), 200
     except Exception as e:
-        print(f"[POMODORO STATS ERROR] Failed to get stats: {str(e)}")
-        print(f"[POMODORO STATS ERROR] Error type: {type(e).__name__}")
+        logger.error(f"Failed to get pomodoro stats: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/recurring-tasks', methods=['GET'])
@@ -694,17 +704,17 @@ def health():
 # Initialize database tables (only if they don't exist)
 # In serverless context, this is safe to run on each cold start
 # but will only create tables if they don't exist
-print("[DB INIT] Attempting to initialize database tables...")
+logger.info("Attempting to initialize database tables...")
 try:
     with app.app_context():
         db.create_all()
-        print("[DB INIT] Database tables created/verified successfully")
+        logger.info("Database tables created/verified successfully")
 except Exception as e:
     # Log but don't fail - tables might already exist
-    print(f"[DB INIT ERROR] Database initialization failed: {str(e)}")
-    print(f"[DB INIT ERROR] Error type: {type(e).__name__}")
+    logger.error(f"Database initialization failed: {str(e)}")
+    logger.error(f"Error type: {type(e).__name__}")
 
-print("[SERVER] Flask app initialized and ready")
+logger.info("Flask app initialized and ready for Vercel")
 
 # Export for Vercel serverless functions
 # The app object is automatically available to Vercel's Python runtime
