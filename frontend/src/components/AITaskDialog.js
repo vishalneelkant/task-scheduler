@@ -17,7 +17,7 @@ import {
     Alert,
     Divider
 } from '@mui/material';
-import { Edit, Delete, Close, AutoAwesome } from '@mui/icons-material';
+import { Delete, Close, AutoAwesome } from '@mui/icons-material';
 
 function AITaskDialog({ open, onClose, onCreateTasks }) {
     const [description, setDescription] = useState('');
