@@ -240,10 +240,6 @@ function Dashboard() {
     setOpenRecurringDialog(true);
   };
 
-  const handleCloseRecurringDialog = () => {
-    setOpenRecurringDialog(false);
-    setEditingRecurringTask(null);
-  };
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',

@@ -74,11 +74,6 @@ function AITaskDialog({ open, onClose, onCreateTasks }) {
         setGeneratedTasks(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleEditTask = (index, field, value) => {
-        setGeneratedTasks(prev => prev.map((task, i) =>
-            i === index ? { ...task, [field]: value } : task
-        ));
-    };
 
     const getPriorityLabel = (priority) => {
         const labels = {
