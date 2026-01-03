@@ -8,6 +8,8 @@ from sqlalchemy import func
 import os
 import logging
 import sys
+import json
+import google.generativeai as genai
 
 # Configure logging for Vercel
 logging.basicConfig(
@@ -65,6 +67,14 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+# Configure Gemini AI (only if API key is provided)
+gemini_api_key = os.environ.get('GEMINI_API_KEY')
+if gemini_api_key:
+    genai.configure(api_key=gemini_api_key)
+    logger.info("Gemini AI configured successfully")
+else:
+    logger.warning("GEMINI_API_KEY not set - AI features will be disabled")
 
 # CORS configuration - allow frontend URL
 frontend_url = os.environ.get('FRONTEND_URL', '*')
@@ -622,6 +632,98 @@ def get_pomodoro_stats():
         logger.error(f"Failed to get pomodoro stats: {str(e)}")
         logger.error(f"Error type: {type(e).__name__}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/generate-tasks', methods=['POST'])
+@jwt_required()
+def generate_tasks_with_ai():
+    """
+    Generate tasks from natural language description using AI
+    Request: { "description": "Plan my wedding in June" }
+    Response: { "tasks": [{"title": "...", "description": "...", "priority": 3}, ...] }
+    """
+    logger.info("AI task generation endpoint hit - POST /api/ai/generate-tasks")
+    
+    # Check if Gemini is configured
+    if not gemini_api_key:
+        logger.error("AI task generation attempted but GEMINI_API_KEY not configured")
+        return jsonify({'error': 'AI features are not configured'}), 503
+    
+    try:
+        current_user_id = int(get_jwt_identity())
+        logger.info(f"AI task generation request from user ID: {current_user_id}")
+        
+        data = request.get_json()
+        user_input = data.get('description', '').strip()
+        
+        if not user_input:
+            return jsonify({'error': 'Description is required'}), 400
+        
+        logger.info(f"User input: {user_input[:100]}...")  # Log first 100 chars
+        
+        # Create AI prompt
+        prompt = f"""You are a task planning assistant. Break down this goal into 3-7 specific, actionable tasks.
+
+Goal: {user_input}
+
+Return ONLY a JSON array of tasks with this exact format (no markdown, no text, just JSON):
+[
+  {{"title": "Task name (max 100 chars)", "description": "What to do (max 200 chars)", "priority": 3}},
+  {{"title": "Another task", "description": "Details", "priority": 4}}
+]
+
+Priority scale: 1=Low, 2=Below Normal, 3=Normal, 4=High, 5=Urgent
+Make tasks concrete, actionable, and in order. Each task should be something the user can complete."""
+
+        # Call Gemini API
+        logger.debug("Calling Gemini API...")
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(prompt)
+       
+        logger.debug(f"Gemini response received: {response.text[:200]}...")
+        
+        # Parse AI response
+        tasks_json = response.text.strip()
+        
+        # Remove markdown code blocks if present
+        if '```' in tasks_json:
+            # Extract content between code fences
+            parts = tasks_json.split('```')
+            for part in parts:
+                if part.strip().startswith('json'):
+                    tasks_json = part[4:].strip()
+                    break
+                elif part.strip().startswith('['):
+                    tasks_json = part.strip()
+                    break
+        
+        # Parse JSON
+        tasks = json.loads(tasks_json)
+        
+        # Validate tasks
+        if not isinstance(tasks, list) or len(tasks) == 0:
+            raise ValueError("AI did not return a valid task list")
+        
+        # Clean and validate each task
+        validated_tasks = []
+        for task in tasks[:7]:  # Max 7 tasks
+            if isinstance(task, dict) and 'title' in task:
+                validated_tasks.append({
+                    'title': str(task.get('title', 'Untitled'))[:100],
+                    'description': str(task.get('description', ''))[:200],
+                    'priority': min(max(int(task.get('priority', 3)), 1), 5)
+                })
+        
+        logger.info(f"AI generated {len(validated_tasks)} tasks successfully")
+        return jsonify({'tasks': validated_tasks}), 200
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse AI response as JSON: {str(e)}")
+        logger.error(f"AI response was: {response.text if 'response' in locals() else 'N/A'}")
+        return jsonify({'error': 'AI returned invalid format. Please try rephrasing your request.'}), 500
+    except Exception as e:
+        logger.error(f"AI task generation failed: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        return jsonify({'error': f'Failed to generate tasks: {str(e)}'}), 500
 
 @app.route('/api/recurring-tasks', methods=['GET'])
 @jwt_required()
