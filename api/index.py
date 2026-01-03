@@ -676,7 +676,7 @@ Make tasks concrete, actionable, and in order. Each task should be something the
 
         # Call Gemini API
         logger.debug("Calling Gemini API...")
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content(prompt)
        
         logger.debug(f"Gemini response received: {response.text[:200]}...")
