@@ -16,7 +16,7 @@ import {
   Avatar,
   ListItemIcon,
 } from '@mui/material';
-import { Logout, Add, BarChart, ExpandMore, ExpandLess, Timer, Repeat, CheckCircle, CheckBox, Person, Sparkles } from '@mui/icons-material';
+import { Logout, Add, BarChart, ExpandMore, ExpandLess, Timer, Repeat, CheckCircle, CheckBox, Person, AutoAwesome } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { getTasks, getAnalytics, getPomodoroStats, getRecurringTasks } from '../services/api';
 import TaskList from './TaskList';
