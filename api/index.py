@@ -12,7 +12,12 @@ app = Flask(__name__)
 
 # Configuration for Vercel serverless deployment
 # Use PostgreSQL instead of SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://localhost/pomovity')
+# Handle DATABASE_URL from various providers (some use postgres://, SQLAlchemy needs postgresql://)
+database_url = os.environ.get('DATABASE_URL', 'postgresql://localhost/pomovity')
+# Fix for Heroku/some providers that use postgres:// instead of postgresql://
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Optimized for serverless: smaller pool size, faster connection handling
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
