@@ -17,7 +17,7 @@ import {
     Alert,
     Divider
 } from '@mui/material';
-import { Sparkles, Edit, Delete, Close, AutoAwesome } from '@mui/icons-material';
+import { Edit, Delete, Close, AutoAwesome } from '@mui/icons-material';
 
 function AITaskDialog({ open, onClose, onCreateTasks }) {
     const [description, setDescription] = useState('');
@@ -124,7 +124,7 @@ function AITaskDialog({ open, onClose, onCreateTasks }) {
                                 justifyContent: 'center'
                             }}
                         >
-                            <Sparkles sx={{ color: '#d95550', fontSize: 24 }} />
+                            <AutoAwesome sx={{ color: '#d95550', fontSize: 24 }} />
                         </Box>
                         <Box>
                             <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
@@ -255,7 +255,7 @@ function AITaskDialog({ open, onClose, onCreateTasks }) {
                         onClick={handleGenerate}
                         disabled={!description.trim() || loading}
                         variant="contained"
-                        startIcon={<Sparkles />}
+                        startIcon={<AutoAwesome />}
                         sx={{
                             bgcolor: '#d95550',
                             '&:hover': { bgcolor: '#c62828' },
