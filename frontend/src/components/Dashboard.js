@@ -172,14 +172,14 @@ function Dashboard() {
 
   const handleStartPomodoro = (task) => {
     setSelectedTask(task);
-    setShowTimer(true);
+    setShowTimer(true); // Ensure timer is expanded when starting
   };
 
   const handlePomodoroComplete = (mode) => {
     fetchTasks();
     fetchPomodoroStats();
-    const message = mode === 'work' 
-      ? '🎉 Focus session complete!' 
+    const message = mode === 'work'
+      ? '🎉 Focus session complete!'
       : '☕ Break complete!';
     setSnackbar({ open: true, message, severity: 'success' });
   };
@@ -225,8 +225,8 @@ function Dashboard() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa' }}>
-      <AppBar 
-        position="static" 
+      <AppBar
+        position="static"
         elevation={0}
         sx={{
           bgcolor: '#d95550',
@@ -243,8 +243,8 @@ function Dashboard() {
             color="inherit"
             startIcon={<CheckBox />}
             onClick={() => setCurrentView('tasks')}
-            sx={{ 
-              mr: 1, 
+            sx={{
+              mr: 1,
               borderRadius: 2,
               px: 2,
               bgcolor: currentView === 'tasks' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
@@ -261,8 +261,8 @@ function Dashboard() {
                 color="inherit"
                 startIcon={<Repeat />}
                 onClick={() => setCurrentView('recurring')}
-                sx={{ 
-                  mr: 1, 
+                sx={{
+                  mr: 1,
                   borderRadius: 2,
                   px: 2,
                   bgcolor: currentView === 'recurring' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
@@ -277,8 +277,8 @@ function Dashboard() {
                 color="inherit"
                 startIcon={<BarChart />}
                 onClick={() => setCurrentView('analytics')}
-                sx={{ 
-                  mr: 2, 
+                sx={{
+                  mr: 2,
                   borderRadius: 2,
                   px: 2,
                   bgcolor: currentView === 'analytics' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
@@ -399,10 +399,10 @@ function Dashboard() {
       <Container maxWidth="md" sx={{ mt: 8, pb: 6 }}>
         {/* Guest Mode Banner */}
         {isGuest && (
-          <Alert 
-            severity="info" 
-            sx={{ 
-              mb: 4, 
+          <Alert
+            severity="info"
+            sx={{
+              mb: 4,
               borderRadius: 2,
               border: '1px solid #3b82f6',
               '& .MuiAlert-message': {
@@ -415,17 +415,17 @@ function Dashboard() {
                 You're using <strong>Guest Mode</strong>. Your data is saved locally on this device.
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button 
-                  size="small" 
-                  variant="outlined" 
+                <Button
+                  size="small"
+                  variant="outlined"
                   onClick={handleLoginClick}
                   sx={{ borderColor: '#3b82f6', color: '#3b82f6' }}
                 >
                   Login
                 </Button>
-                <Button 
-                  size="small" 
-                  variant="contained" 
+                <Button
+                  size="small"
+                  variant="contained"
                   onClick={handleSignUpClick}
                   sx={{ bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' } }}
                 >
@@ -435,7 +435,7 @@ function Dashboard() {
             </Box>
           </Alert>
         )}
-        
+
         <Box sx={{ textAlign: 'center', mb: 5 }}>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#1f2937', mb: 1 }}>
             {currentView === 'tasks' && "Today's Tasks"}
@@ -457,13 +457,13 @@ function Dashboard() {
               Manage tasks that repeat automatically
             </Typography>
           )}
-          
+
           {currentView === 'tasks' && (
             <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Chip
                 icon={<CheckCircle sx={{ fontSize: '1.1rem' }} />}
                 label={`${completedCount} / ${totalCount} Completed`}
-                sx={{ 
+                sx={{
                   bgcolor: completedCount === totalCount && totalCount > 0 ? '#ecfdf5' : '#f3f4f6',
                   color: completedCount === totalCount && totalCount > 0 ? '#059669' : '#374151',
                   fontWeight: 500,
@@ -479,7 +479,7 @@ function Dashboard() {
               <Chip
                 icon={<Timer sx={{ fontSize: '1.1rem' }} />}
                 label={`${pomodoroStats.today.count} Pomodoros`}
-                sx={{ 
+                sx={{
                   bgcolor: '#fff5f5',
                   color: '#d95550',
                   fontWeight: 500,
@@ -505,7 +505,7 @@ function Dashboard() {
                   fontSize: '0.95rem',
                   borderRadius: 2.5,
                   boxShadow: '0 2px 8px rgba(217, 85, 80, 0.25)',
-                  '&:hover': { 
+                  '&:hover': {
                     bgcolor: '#c62828',
                     boxShadow: '0 4px 12px rgba(217, 85, 80, 0.35)',
                     transform: 'translateY(-1px)',
@@ -532,7 +532,7 @@ function Dashboard() {
                   fontSize: '0.95rem',
                   borderRadius: 2.5,
                   boxShadow: '0 2px 8px rgba(217, 85, 80, 0.25)',
-                  '&:hover': { 
+                  '&:hover': {
                     bgcolor: '#c62828',
                     boxShadow: '0 4px 12px rgba(217, 85, 80, 0.35)',
                     transform: 'translateY(-1px)',
@@ -553,8 +553,15 @@ function Dashboard() {
               <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
                 Pomodoro Timer
               </Typography>
-              <IconButton 
-                onClick={() => setShowTimer(!showTimer)} 
+              <IconButton
+                onClick={() => {
+                  const newShowTimer = !showTimer;
+                  setShowTimer(newShowTimer);
+                  // Clear task selection when fully collapsing
+                  if (!newShowTimer) {
+                    setSelectedTask(null);
+                  }
+                }}
                 size="small"
                 sx={{
                   transition: 'all 0.2s ease',
@@ -566,8 +573,8 @@ function Dashboard() {
                 {showTimer ? <ExpandLess /> : <ExpandMore />}
               </IconButton>
             </Box>
-            <PomodoroTimer 
-              selectedTask={selectedTask} 
+            <PomodoroTimer
+              selectedTask={selectedTask}
               onComplete={handlePomodoroComplete}
               minimized={!showTimer}
             />
@@ -575,10 +582,10 @@ function Dashboard() {
         )}
 
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 4, 
+          <Alert
+            severity="error"
+            sx={{
+              mb: 4,
               borderRadius: 2,
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
@@ -597,7 +604,7 @@ function Dashboard() {
             onEditTask={handleEditTask}
           />
         )}
-        
+
         {!isGuest && currentView === 'analytics' && (
           <Analytics data={analyticsData} />
         )}

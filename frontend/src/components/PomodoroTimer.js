@@ -59,8 +59,8 @@ function PomodoroTimer({ selectedTask, onComplete, minimized = false }) {
         clearInterval(intervalRef.current);
       }
     };
-    // eslint-disable-next-line no-use-before-define
-  }, [isActive, isPaused, minutes, seconds, handleTimerComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, isPaused, minutes, seconds]);
 
   // Update browser tab title with timer countdown
   useEffect(() => {
