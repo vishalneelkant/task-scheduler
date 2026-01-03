@@ -10,9 +10,11 @@ def init_database():
     print("🔄 Starting database migration...")
     print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI'][:30]}...")
     
+
     with app.app_context():
         try:
             # Create all tables
+            #new changes
             db.create_all()
             print("✅ Database tables created successfully!")
             
