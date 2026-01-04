@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -17,13 +17,87 @@ import {
     Alert,
     Divider
 } from '@mui/material';
-import { Delete, Close, AutoAwesome } from '@mui/icons-material';
+import { Delete, Close, AutoAwesome, Mic, MicOff } from '@mui/icons-material';
 
 function AITaskDialog({ open, onClose, onCreateTasks }) {
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
     const [generatedTasks, setGeneratedTasks] = useState([]);
     const [error, setError] = useState('');
+
+    // Voice recognition state
+    const [isListening, setIsListening] = useState(false);
+    const [recognition, setRecognition] = useState(null);
+    const [browserSupportsVoice, setBrowserSupportsVoice] = useState(true);
+
+    // Initialize speech recognition
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognitionInstance = new SpeechRecognition();
+
+            recognitionInstance.continuous = true;
+            recognitionInstance.interimResults = true;
+            recognitionInstance.lang = 'en-US';
+
+            recognitionInstance.onresult = (event) => {
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    }
+                }
+
+                if (finalTranscript) {
+                    setDescription(prev => prev + finalTranscript);
+                }
+            };
+
+            recognitionInstance.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                setIsListening(false);
+                if (event.error === 'not-allowed') {
+                    setError('Microphone permission denied. Please allow microphone access in your browser settings.');
+                } else if (event.error === 'no-speech') {
+                    setError('No speech detected. Please try again.');
+                }
+            };
+
+            recognitionInstance.onend = () => {
+                setIsListening(false);
+            };
+
+            setRecognition(recognitionInstance);
+        } else {
+            setBrowserSupportsVoice(false);
+        }
+    }, []);
+
+    const startListening = () => {
+        if (recognition) {
+            setError('');
+            setIsListening(true);
+            try {
+                recognition.start();
+            } catch (err) {
+                console.error('Failed to start recognition:', err);
+                setIsListening(false);
+            }
+        }
+    };
+
+    const stopListening = () => {
+        if (recognition) {
+            setIsListening(false);
+            try {
+                recognition.stop();
+            } catch (err) {
+                console.error('Failed to stop recognition:', err);
+            }
+        }
+    };
 
     const handleGenerate = async () => {
         setLoading(true);
