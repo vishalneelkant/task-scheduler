@@ -15,7 +15,8 @@ import {
     Box,
     Typography,
     Alert,
-    Divider
+    Divider,
+    InputAdornment
 } from '@mui/material';
 import { Delete, Close, AutoAwesome, Mic, MicOff } from '@mui/icons-material';
 
@@ -141,13 +142,15 @@ function AITaskDialog({ open, onClose, onCreateTasks }) {
         setGeneratedTasks([]);
         setError('');
         setLoading(false);
+        if (isListening) {
+            stopListening();
+        }
         onClose();
     };
 
     const handleRemoveTask = (index) => {
         setGeneratedTasks(prev => prev.filter((_, i) => i !== index));
     };
-
 
     const getPriorityLabel = (priority) => {
         const labels = {
@@ -217,13 +220,35 @@ function AITaskDialog({ open, onClose, onCreateTasks }) {
                     autoFocus
                     margin="dense"
                     label="What do you want to accomplish?"
-                    placeholder="e.g., Plan my product launch, Prepare for my exam, Organize wedding"
+                    placeholder="e.g., Plan my product launch or click mic to speak 🎤"
                     fullWidth
                     multiline
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     disabled={loading || generatedTasks.length > 0}
+                    InputProps={{
+                        endAdornment: browserSupportsVoice && (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    onClick={isListening ? stopListening : startListening}
+                                    disabled={loading || generatedTasks.length > 0}
+                                    edge="end"
+                                    sx={{
+                                        color: isListening ? '#d95550' : '#6b7280',
+                                        animation: isListening ? 'pulse 1.5s infinite' : 'none',
+                                        '@keyframes pulse': {
+                                            '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                                            '50%': { opacity: 0.6, transform: 'scale(1.1)' }
+                                        }
+                                    }}
+                                    title={isListening ? 'Click to stop' : 'Click to speak'}
+                                >
+                                    {isListening ? <MicOff /> : <Mic />}
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
                     sx={{
                         '& .MuiOutlinedInput-root': {
                             borderRadius: 2,
@@ -231,6 +256,18 @@ function AITaskDialog({ open, onClose, onCreateTasks }) {
                         }
                     }}
                 />
+
+                {isListening && (
+                    <Alert severity="info" icon={<Mic />} sx={{ mt: 2, borderRadius: 2, animation: 'fadeIn 0.3s' }}>
+                        🎤 Listening... Speak now!
+                    </Alert>
+                )}
+
+                {!browserSupportsVoice && (
+                    <Alert severity="warning" sx={{ mt: 2, borderRadius: 2 }}>
+                        Voice input not supported in this browser. Try Chrome, Edge, or Safari.
+                    </Alert>
+                )}
 
                 {loading && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
